@@ -1,12 +1,15 @@
 ---
 title: "Climate Extremes Analysis Demo"
-output: html_document
+output: 
+  html_document: 
+    code_folding: show
 ---
 
-```{r setup}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, echo = TRUE, results = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = FALSE, warning = FALSE, message = FALSE)
 library(lubridate)
 library(tidyverse)
+library(here)
 ```
 ### Getting Started: set up environment
 
@@ -31,7 +34,7 @@ We can look at the data that we've read in using the `head` command; this will d
 
 
 ```{r readdata}
-clim = read.table("CachumaLake_NCDC_USC00041253.csv",fill=TRUE,sep=',',header=T)
+clim = read_csv(here("CachumaLake_NCDC_USC00041253.csv"))
 head(clim)
 
 date=as.Date(clim$DATE)

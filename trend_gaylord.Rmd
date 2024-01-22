@@ -36,7 +36,9 @@ library(tidyverse)
 library(Kendall)
 library(here)
 
-clim = read_csv(here("CachumaLake_NCDC_USC00041253.csv"))
+clim = read_csv(here("gaylordbay.csv")) %>% 
+  select("STATION", "NAME", "DATE", "PRCP", "TMAX", "TMIN")
+
 head(clim)
 ```
 
@@ -97,10 +99,12 @@ ggplot(clim, aes(date, PRCP))+geom_line()+ labs(y="Daily rainfall (mm)", x="Date
 
 # find rows with missing data
 # temperature: values are either NA or not reasonable for that location (here, below 40F)
-fillrow = which(is.na(clim$TMAX) | clim$TMAX < 40)
+fillrow = which(is.na(clim$TMAX) | clim$TMAX < 10)
 fillrow = fillrow[2:length(fillrow)]
 clim$TMAX[fillrow]=(clim$TMAX[fillrow+1]+clim$TMAX[fillrow-1])/2
 ggplot(clim, aes(date, clim$TMAX))+geom_line()+ labs(y="Daily Maximum Temperature (degrees F)", x="Date")
+
+# clim <- clim %>% drop_na()
 
 ```
 
@@ -176,16 +180,16 @@ We might also cut the data into specific periods and see how the slope is changi
 
 
 # early portion
-res_early=lm(tmin~dt, data=subset(clim.mwy, clim.mwy$dt %in% c(1952:1970)))
+res_early=lm(tmin~dt, data=subset(clim.mwy, clim.mwy$dt %in% c(2010:2015)))
 summary(res_early)
 confint(res_early,"dt", level=0.90)
-ggplot(subset(clim.mwy, clim.mwy$dt %in% c(1952:1970)), aes(x=dt, y=tmin)) + stat_summary(fun.y="mean", geom="point", col="red", size=4)+theme(axis.text=element_text(size=14, face="bold"), axis.title=element_text(size=14, face="bold")) + geom_smooth(method="lm")
+ggplot(subset(clim.mwy, clim.mwy$dt %in% c(2010:2015)), aes(x=dt, y=tmin)) + stat_summary(fun.y="mean", geom="point", col="red", size=4)+theme(axis.text=element_text(size=14, face="bold"), axis.title=element_text(size=14, face="bold")) + geom_smooth(method="lm")
 
 # last decade
-res_late=lm(tmin~dt, data=subset(clim.mwy, clim.mwy$dt %in% c(1995:2021)))
+res_late=lm(tmin~dt, data=subset(clim.mwy, clim.mwy$dt %in% c(2016:2023)))
 summary(res_late)
 confint(res_late,"dt", level=0.90)
-ggplot(subset(clim.mwy, clim.mwy$dt %in% c(1995:2021)), aes(x=dt, y=tmin)) + stat_summary(fun.y="mean", geom="point", col="red", size=4)+theme(axis.text=element_text(size=14, face="bold"), axis.title=element_text(size=14, face="bold")) + geom_smooth(method="lm")
+ggplot(subset(clim.mwy, clim.mwy$dt %in% c(2016:2023)), aes(x=dt, y=tmin)) + stat_summary(fun.y="mean", geom="point", col="red", size=4)+theme(axis.text=element_text(size=14, face="bold"), axis.title=element_text(size=14, face="bold")) + geom_smooth(method="lm")
 
 
 ```
@@ -216,9 +220,11 @@ or Rank-Sum if we do not.
 
 ```{r ttest, echo=TRUE}
 
-t.test(subset(clim.mwy$tmin, clim.mwy$dt %in% 1953:1969), subset(clim.mwy$tmin, clim.mwy$dt %in% 1995:2004))
+clim %>% drop_na()
 
-wilcox.test(subset(clim.mwy$tmin, clim.mwy$dt %in% 1953:1969), subset(clim.mwy$tmin, clim.mwy$dt %in% 1995:2004))
+t.test(subset(clim.mwy$tmin, clim.mwy$dt %in% 2010:2015), subset(clim.mwy$tmin, clim.mwy$dt %in% 2010:2015))
+
+wilcox.test(subset(clim.mwy$tmin, clim.mwy$dt %in% 2016:2023), subset(clim.mwy$tmin, clim.mwy$dt %in% 2016:2023))
 
 ```
 There is a statistically significant difference in the means according to both tests, although the p value is slightly lower for the T test.

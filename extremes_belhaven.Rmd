@@ -60,11 +60,11 @@ Finally, the number of freezing days is plotted using ggplot, as we did for the 
 
 ```{r other metrics, echo=TRUE}
 
-clim$freeze = ifelse(clim$TMIN <= 32, 1, 0)
-clim.wfrdata = clim %>% group_by(year(date)) %>% summarize(ndayfr=sum(freeze))
+clim$heat = ifelse(clim$TMAX <= 90, 0, 1)
+clim.wfrdata = clim %>% group_by(year(date)) %>% summarize(ndayfr=sum(heat))
 clim.wfrdata$dt = unique(year(date))
 
-ggplot(clim.wfrdata, aes(dt, ndayfr))+geom_point()+labs(y="Number of Freezing Days")
+ggplot(clim.wfrdata, aes(dt, ndayfr))+geom_col(position = "stack", fill="red")+labs(x = "Year", y="Number of Extreme Heat Days") + theme_minimal()
 ```
 
 Note that the trends in mean-state and extreme metrics often go together: from last time, recall that there was a trend toward decreasing minimum daily temperature. How does that affect the frequency of occurrence of freezing days?
@@ -80,7 +80,7 @@ This is accomplished using a similar methodology as we used for the freezing day
 clim.pk = clim %>% group_by(year(date)) %>% summarize(hotday=max(TMAX))
 clim.pk$dt = unique(year(date))
 
-ggplot(clim.pk, aes(dt, hotday))+geom_point()+labs(y="Hottest Day in the Year")
+ggplot(clim.pk, aes(dt, hotday))+geom_point(col = "red")+labs(y="Hottest Day in the Year") + theme_minimal()
 ```
 
 ### Extremes metrics: return periods
@@ -94,10 +94,27 @@ We'll specify some reasonable threshold for daily precipitation: say, 1 inch/day
 The return period is then the number of years (plus one to include the starting year) divided by the number of times the threshold exceedance has actually occurred. (Note: we have to use the `na.rm=TRUE` flag to prevent NA entries from seeming like they are contributing to the count of threshold exceedances!)
 
 ``` {r return period}
-clim$flood = ifelse(clim$PRCP >= 1, 1, 0)
+clim$flood = ifelse(clim$PRCP >= 1.5, 1, 0)
 nyrs=length(unique(year(date)))
 
 retper=(nyrs+1)/sum(clim$flood,na.rm=TRUE)
 ```
 
 Another note: return *levels* are somewhat more complicated to calculate, since they require fitting the underlying distribution of the data... there are lots of resources out there if you need them though!
+
+```{r}
+# clim$flood = ifelse(clim$PRCP >= 1, 1, 0)
+clim.fldata = clim %>% group_by(year(date)) %>% summarize(ndayfl=sum(flood))
+clim.fldata$dt = unique(year(date))
+
+ggplot(clim.fldata, aes(dt, ndayfl))+geom_col(position = "stack", fill="blue")+labs(x = "Year", y="Number of Extreme Precipitation Days") + theme_minimal()
+```
+
+```{r}
+library(Kendall)
+MannKendall(clim.wfrdata$ndayfr)
+MannKendall(clim.fldata$ndayfl)
+```
+
+
+
